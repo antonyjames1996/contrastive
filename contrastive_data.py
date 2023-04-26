@@ -13,28 +13,33 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from shutil import copyfile
 
 import matplotlib.pyplot as plt
-from random_eraser import get_random_eraser 
+from random_eraser import get_random_eraser
 import tqdm
 
-!wget --no-check-certificate \
+os.system(
+    '!wget --no-check-certificate \
     "https://download.microsoft.com/download/3/E/1/3E1C3F21-ECDB-4869-8368-6DEBA77B919F/kagglecatsanddogs_5340.zip" \
-    -O "/tmp/cats-and-dogs.zip"
+    -O "/tmp/cats-and-dogs.zip"'
+)
+# !wget --no-check-certificate \
+#     "https://download.microsoft.com/download/3/E/1/3E1C3F21-ECDB-4869-8368-6DEBA77B919F/kagglecatsanddogs_5340.zip" \
+#     -O "/tmp/cats-and-dogs.zip"
 
 # !wget  "https://download.microsoft.com/download/3/E/1/3E1C3F21-ECDB-4869-8368-6DEBA77B919F/kagglecatsanddogs_3367a.zip"
 
-local_zip ='/tmp/cats-and-dogs.zip'
-zip_ref   = zipfile.ZipFile(local_zip, 'r')
-zip_ref.extractall('/tmp')
+local_zip = "/tmp/cats-and-dogs.zip"
+zip_ref = zipfile.ZipFile(local_zip, "r")
+zip_ref.extractall("/tmp")
 zip_ref.close()
 
 try:
-    os.makedirs('/tmp/cats-v-dogs')
-    os.makedirs('/tmp/cats-v-dogs/training')
-    os.makedirs('/tmp/cats-v-dogs/testing')
-    os.makedirs('/tmp/cats-v-dogs/training/cats')
-    os.makedirs('/tmp/cats-v-dogs/training/dogs')
-    os.makedirs('/tmp/cats-v-dogs/testing/cats')
-    os.makedirs('/tmp/cats-v-dogs/testing/dogs')
+    os.makedirs("/tmp/cats-v-dogs")
+    os.makedirs("/tmp/cats-v-dogs/training")
+    os.makedirs("/tmp/cats-v-dogs/testing")
+    os.makedirs("/tmp/cats-v-dogs/training/cats")
+    os.makedirs("/tmp/cats-v-dogs/training/dogs")
+    os.makedirs("/tmp/cats-v-dogs/testing/cats")
+    os.makedirs("/tmp/cats-v-dogs/testing/dogs")
 except OSError:
     pass
 
@@ -72,7 +77,7 @@ DOG_SOURCE_DIR = "/tmp/PetImages/Dog/"
 TRAINING_DOGS_DIR = "/tmp/cats-v-dogs/training/dogs/"
 TESTING_DOGS_DIR = "/tmp/cats-v-dogs/testing/dogs/"
 
-split_size = .9
+split_size = 0.9
 split_data(CAT_SOURCE_DIR, TRAINING_CATS_DIR, TESTING_CATS_DIR, split_size)
 split_data(DOG_SOURCE_DIR, TRAINING_DOGS_DIR, TESTING_DOGS_DIR, split_size)
 
@@ -82,38 +87,39 @@ split_data(DOG_SOURCE_DIR, TRAINING_DOGS_DIR, TESTING_DOGS_DIR, split_size)
 
 
 TRAINING_DIR = "/tmp/cats-v-dogs/training/"
-train_datagen = ImageDataGenerator(rescale=1.0/255. , preprocessing_function=get_random_eraser(v_l=0, v_h=1))
-train_generator = train_datagen.flow_from_directory(TRAINING_DIR,
-                                                    batch_size=250,
-                                                    class_mode='binary',
-                                                    target_size=(64, 64))
+train_datagen = ImageDataGenerator(
+    rescale=1.0 / 255.0, preprocessing_function=get_random_eraser(v_l=0, v_h=1)
+)
+train_generator = train_datagen.flow_from_directory(
+    TRAINING_DIR, batch_size=250, class_mode="binary", target_size=(64, 64)
+)
 
 VALIDATION_DIR = "/tmp/cats-v-dogs/testing/"
-validation_datagen = ImageDataGenerator(rescale=1.0/255. , preprocessing_function=get_random_eraser(v_l=0, v_h=1))
-validation_generator = validation_datagen.flow_from_directory(VALIDATION_DIR,
-                                                              batch_size=250,
-                                                              class_mode='binary',
-                                                              target_size=(64, 64))
-
+validation_datagen = ImageDataGenerator(
+    rescale=1.0 / 255.0, preprocessing_function=get_random_eraser(v_l=0, v_h=1)
+)
+validation_generator = validation_datagen.flow_from_directory(
+    VALIDATION_DIR, batch_size=250, class_mode="binary", target_size=(64, 64)
+)
 
 
 train_generator.reset()
 X_train, y_train = next(train_generator)
 batch_size = 250
-for i in tqdm.tqdm(range(int(train_generator.n/batch_size)-1)): 
-  img, label = next(train_generator)
-  X_train = np.append(X_train, img, axis=0 )
-  y_train = np.append(y_train, label, axis=0)
+for i in tqdm.tqdm(range(int(train_generator.n / batch_size) - 1)):
+    img, label = next(train_generator)
+    X_train = np.append(X_train, img, axis=0)
+    y_train = np.append(y_train, label, axis=0)
 print(X_train.shape, y_train.shape)
 
 
 validation_generator.reset()
 X_test, y_test = next(validation_generator)
 batch_size = 250
-for i in tqdm.tqdm(range(int(validation_generator.n/batch_size)-1)): 
-  img, label = next(validation_generator)
-  X_test = np.append(X_test, img, axis=0 )
-  y_test = np.append(y_test, label, axis=0)
+for i in tqdm.tqdm(range(int(validation_generator.n / batch_size) - 1)):
+    img, label = next(validation_generator)
+    X_test = np.append(X_test, img, axis=0)
+    y_test = np.append(y_test, label, axis=0)
 print(X_test.shape, y_test.shape)
 
 
@@ -133,6 +139,7 @@ data_augmentation = keras.Sequential(
 # Setting the state of the normalization layer.
 data_augmentation.layers[0].adapt(X_train)
 
+
 def create_encoder():
     resnet = keras.applications.ResNet50V2(
         include_top=False, weights=None, input_shape=input_shape, pooling="avg"
@@ -141,7 +148,7 @@ def create_encoder():
     inputs = keras.Input(shape=input_shape)
     # augmented = data_augmentation(inputs)
     # outputs = resnet(augmented)
-    outputs = resnet(inputs) 
+    outputs = resnet(inputs)
     model = keras.Model(inputs=inputs, outputs=outputs, name="cat-vs-dog-encoder")
     return model
 
@@ -157,8 +164,8 @@ num_epochs = 10
 dropout_rate = 0.5
 temperature = 0.05
 
-def create_classifier(encoder, trainable=True):
 
+def create_classifier(encoder, trainable=True):
     for layer in encoder.layers:
         layer.trainable = trainable
 
@@ -176,6 +183,7 @@ def create_classifier(encoder, trainable=True):
         metrics=[keras.metrics.SparseCategoricalAccuracy()],
     )
     return model
+
 
 class SupervisedContrastiveLoss(keras.losses.Loss):
     def __init__(self, temperature=1, name=None):
@@ -204,6 +212,7 @@ def add_projection_head(encoder):
     )
     return model
 
+
 encoder = create_encoder()
 
 encoder_with_projection_head = add_projection_head(encoder)
@@ -218,5 +227,4 @@ history = encoder_with_projection_head.fit(
     x=X_train, y=y_train, batch_size=batch_size, epochs=50
 )
 
-encoder_with_projection_head.save('models/contrastive+randErasing.h5')
-
+encoder_with_projection_head.save("models/contrastive+randErasing.h5")
