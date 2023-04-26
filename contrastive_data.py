@@ -18,7 +18,7 @@ import tqdm
 
 tf.debugging.set_log_device_placement(True)
 
-with tf.device('/GPU:0')
+with tf.device("/GPU:0"):
     os.system(
         '!wget --no-check-certificate \
         "https://download.microsoft.com/download/3/E/1/3E1C3F21-ECDB-4869-8368-6DEBA77B919F/kagglecatsanddogs_5340.zip" \
@@ -46,7 +46,6 @@ with tf.device('/GPU:0')
     except OSError:
         pass
 
-
     def split_data(SOURCE, TRAINING, TESTING, SPLIT_SIZE):
         files = []
         for filename in os.listdir(SOURCE):
@@ -72,7 +71,6 @@ with tf.device('/GPU:0')
             destination = TESTING + filename
             copyfile(this_file, destination)
 
-
     CAT_SOURCE_DIR = "/tmp/PetImages/Cat/"
     TRAINING_CATS_DIR = "/tmp/cats-v-dogs/training/cats/"
     TESTING_CATS_DIR = "/tmp/cats-v-dogs/testing/cats/"
@@ -87,7 +85,6 @@ with tf.device('/GPU:0')
     # Expected output
     # 666.jpg is zero length, so ignoring
     # 11702.jpg is zero length, so ignoring
-
 
     TRAINING_DIR = "/tmp/cats-v-dogs/training/"
     train_datagen = ImageDataGenerator(
@@ -105,7 +102,6 @@ with tf.device('/GPU:0')
         VALIDATION_DIR, batch_size=250, class_mode="binary", target_size=(64, 64)
     )
 
-
     train_generator.reset()
     X_train, y_train = next(train_generator)
     batch_size = 250
@@ -115,7 +111,6 @@ with tf.device('/GPU:0')
         y_train = np.append(y_train, label, axis=0)
     print(X_train.shape, y_train.shape)
 
-
     validation_generator.reset()
     X_test, y_test = next(validation_generator)
     batch_size = 250
@@ -124,7 +119,6 @@ with tf.device('/GPU:0')
         X_test = np.append(X_test, img, axis=0)
         y_test = np.append(y_test, label, axis=0)
     print(X_test.shape, y_test.shape)
-
 
     num_classes = 2
     input_shape = (64, 64, 3)
@@ -142,7 +136,6 @@ with tf.device('/GPU:0')
     # Setting the state of the normalization layer.
     data_augmentation.layers[0].adapt(X_train)
 
-
     def create_encoder():
         resnet = keras.applications.ResNet50V2(
             include_top=False, weights=None, input_shape=input_shape, pooling="avg"
@@ -155,7 +148,6 @@ with tf.device('/GPU:0')
         model = keras.Model(inputs=inputs, outputs=outputs, name="cat-vs-dog-encoder")
         return model
 
-
     encoder = create_encoder()
     encoder.summary()
 
@@ -166,7 +158,6 @@ with tf.device('/GPU:0')
     num_epochs = 10
     dropout_rate = 0.5
     temperature = 0.05
-
 
     def create_classifier(encoder, trainable=True):
         for layer in encoder.layers:
@@ -179,14 +170,15 @@ with tf.device('/GPU:0')
         features = layers.Dropout(dropout_rate)(features)
         outputs = layers.Dense(num_classes, activation="softmax")(features)
 
-        model = keras.Model(inputs=inputs, outputs=outputs, name="cat-vs-dog-classifier")
+        model = keras.Model(
+            inputs=inputs, outputs=outputs, name="cat-vs-dog-classifier"
+        )
         model.compile(
             optimizer=keras.optimizers.Adam(learning_rate),
             loss=keras.losses.SparseCategoricalCrossentropy(),
             metrics=[keras.metrics.SparseCategoricalAccuracy()],
         )
         return model
-
 
     class SupervisedContrastiveLoss(keras.losses.Loss):
         def __init__(self, temperature=1, name=None):
@@ -205,16 +197,16 @@ with tf.device('/GPU:0')
             )
             return tfa.losses.npairs_loss(tf.squeeze(labels), logits)
 
-
     def add_projection_head(encoder):
         inputs = keras.Input(shape=input_shape)
         features = encoder(inputs)
         outputs = layers.Dense(projection_units, activation="relu")(features)
         model = keras.Model(
-            inputs=inputs, outputs=outputs, name="catsVsDogs-encoder_with_projection-head"
+            inputs=inputs,
+            outputs=outputs,
+            name="catsVsDogs-encoder_with_projection-head",
         )
         return model
-
 
     encoder = create_encoder()
 
