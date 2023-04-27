@@ -13,12 +13,14 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from shutil import copyfile
 
 import matplotlib.pyplot as plt
-from contrastive.random_eraser import get_random_eraser
+from random_eraser import get_random_eraser
 import tqdm
 
 tf.debugging.set_log_device_placement(True)
+os.environ['CUDA_VISIBLE_DEVICES'] = '0'
+os.environ["SM_FRAMEWORK"] = "tf.keras"
 
-with tf.device("/GPU:0"):
+with tf.device("GPU:0"):
     os.system(
         '!wget --no-check-certificate \
         "https://download.microsoft.com/download/3/E/1/3E1C3F21-ECDB-4869-8368-6DEBA77B919F/kagglecatsanddogs_5340.zip" \
@@ -125,7 +127,7 @@ with tf.device("/GPU:0"):
 
     data_augmentation = keras.Sequential(
         [
-            layers.Normalization(),
+            layers.experimental.preprocessing.Normalization(),
             layers.experimental.preprocessing.RandomFlip("horizontal"),
             layers.experimental.preprocessing.RandomRotation(0.02),
             layers.experimental.preprocessing.RandomWidth(0.2),
